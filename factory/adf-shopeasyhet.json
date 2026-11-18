@@ -1,0 +1,15 @@
+{
+	"name": "adf-shopeasyhet",
+	"properties": {
+		"trustModeClaimForMi": {
+			"value": "Disabled",
+			"editable": true
+		}
+	},
+	"location": "eastus",
+	"identity": {
+		"type": "SystemAssigned",
+		"principalId": "9492d4ea-9a07-4d4b-8c3a-53ae1d90b0d4",
+		"tenantId": "04d14aa7-3c91-49cf-b73c-ad698cd7d23f"
+	}
+}
