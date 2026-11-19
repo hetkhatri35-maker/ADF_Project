@@ -5,20 +5,11 @@
 			"referenceName": "LS_Blobstorage_SopEasy",
 			"type": "LinkedServiceReference"
 		},
-		"parameters": {
-			"FileName": {
-				"type": "string"
-			}
-		},
 		"annotations": [],
 		"type": "DelimitedText",
 		"typeProperties": {
 			"location": {
 				"type": "AzureBlobStorageLocation",
-				"fileName": {
-					"value": "@dataset().FileName",
-					"type": "Expression"
-				},
 				"folderPath": "orders/year=2024",
 				"container": "raw"
 			},
