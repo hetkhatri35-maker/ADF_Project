@@ -130,7 +130,23 @@
 				"     format: 'table',",
 				"     skipDuplicateMapInputs: true,",
 				"     skipDuplicateMapOutputs: true,",
-				"     errorHandlingOption: 'stopOnFirstError') ~> SinkOrders"
+				"     errorHandlingOption: 'stopOnFirstError',",
+				"     mapColumn(",
+				"          Orderid = OrderId,",
+				"          CustomerId,",
+				"          Productid = ProductId,",
+				"          Orderdate = OrderDate,",
+				"          Ordermonth = OrderMonth,",
+				"          OrderYear,",
+				"          UnitPrice,",
+				"          Discountamount,",
+				"          GrossRevenue,",
+				"          ShippingCost,",
+				"          Netrevenue = NetRevenue,",
+				"          Orderstatus = OrderStatus,",
+				"          Isdelivered = isDelivered,",
+				"          Region",
+				"     )) ~> SinkOrders"
 			]
 		}
 	}
