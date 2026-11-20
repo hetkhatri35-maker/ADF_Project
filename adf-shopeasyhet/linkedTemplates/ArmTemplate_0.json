@@ -1626,6 +1626,111 @@
 				"[concat(variables('factoryId'), '/datasets/DS_Blob_Return')]",
 				"[concat(variables('factoryId'), '/datasets/DS_Fact_Returns')]"
 			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/PL_Master_Shopeasy')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"description": "Master Orechestration",
+				"activities": [
+					{
+						"name": "LoadDimension",
+						"type": "ExecutePipeline",
+						"dependsOn": [],
+						"policy": {
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "PL_Load_Dimensions",
+								"type": "PipelineReference"
+							},
+							"waitOnCompletion": true,
+							"parameters": {}
+						}
+					},
+					{
+						"name": "TransformOrders",
+						"type": "ExecutePipeline",
+						"dependsOn": [
+							{
+								"activity": "LoadDimension",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "PL_Transform_Orders",
+								"type": "PipelineReference"
+							},
+							"waitOnCompletion": true,
+							"parameters": {}
+						}
+					},
+					{
+						"name": "DF_ActivityEnrich",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [
+							{
+								"activity": "TransformOrders",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "DF_Enrich_orders",
+								"type": "DataFlowReference",
+								"parameters": {},
+								"datasetParameters": {
+									"RawSource": {},
+									"Customers": {},
+									"Products": {},
+									"FinalDestination": {}
+								}
+							},
+							"staging": {},
+							"compute": {
+								"coreCount": 16,
+								"computeType": "General"
+							},
+							"traceLevel": "Fine"
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"parameters": {
+					"name": {
+						"type": "string",
+						"defaultValue": "full"
+					}
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/pipelines/PL_Load_Dimensions')]",
+				"[concat(variables('factoryId'), '/pipelines/PL_Transform_Orders')]",
+				"[concat(variables('factoryId'), '/dataflows/DF_Enrich_orders')]"
+			]
 		}
 	]
 }
