@@ -18,7 +18,7 @@
 						"referenceName": "DS_Fact_Orders",
 						"type": "DatasetReference"
 					},
-					"name": "sink1"
+					"name": "SinkOrders"
 				}
 			],
 			"transformations": [
@@ -27,10 +27,13 @@
 					"description": "creating expression filter"
 				},
 				{
-					"name": "derivedColumn1"
+					"name": "derived"
 				},
 				{
 					"name": "cast1"
+				},
+				{
+					"name": "FinalColumn"
 				}
 			],
 			"scriptLines": [
@@ -55,7 +58,13 @@
 				"ValidOrders derive(GrossRevenue = Quantity * UnitPrice,",
 				"          Discountamount = Quantity*UnitPrice*Discount,",
 				"          NetRevenue = Quantity * UnitPrice *  (1-Discount),",
-				"          TotalRevenue = (Quantity * UnitPrice *(1-Discount)+ShippingCost)) ~> derivedColumn1",
+				"          TotalRevenue = (Quantity * UnitPrice *(1-Discount)+ShippingCost),",
+				"          isDelivered = equals(OrderStatus,'Delivered')\r",
+				",",
+				"          OrderMonth = month(toDate(OrderDate,'yyy-MM-dd')),",
+				"          OrderYear = year(toDate(OrderDate,'yyyy-MM-dd')),",
+				"          OrderDateClean = toDate(OrderDate, 'yyyy-MM-dd')\r",
+				") ~> derived",
 				"janOrders cast(output(",
 				"          Quantity as integer '000',",
 				"          UnitPrice as integer '000',",
@@ -63,7 +72,30 @@
 				"          ShippingCost as integer '000'",
 				"     ),",
 				"     errors: true) ~> cast1",
-				"derivedColumn1 sink(allowSchemaDrift: true,",
+				"derived select(mapColumn(",
+				"          OrderId,",
+				"          CustomerId,",
+				"          ProductId,",
+				"          OrderDateold = OrderDate,",
+				"          Quantity,",
+				"          UnitPrice,",
+				"          Discount,",
+				"          ShippingCost,",
+				"          PaymentMethod,",
+				"          OrderStatus,",
+				"          Region,",
+				"          GrossRevenue,",
+				"          Discountamount,",
+				"          NetRevenue,",
+				"          TotalRevenue,",
+				"          isDelivered,",
+				"          OrderMonth,",
+				"          OrderYear,",
+				"          OrderDate = OrderDateClean",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> FinalColumn",
+				"FinalColumn sink(allowSchemaDrift: true,",
 				"     validateSchema: false,",
 				"     input(",
 				"          Orderid as string,",
@@ -94,10 +126,11 @@
 				"     insertable:true,",
 				"     updateable:false,",
 				"     upsertable:false,",
+				"     truncate:true,",
 				"     format: 'table',",
 				"     skipDuplicateMapInputs: true,",
 				"     skipDuplicateMapOutputs: true,",
-				"     errorHandlingOption: 'stopOnFirstError') ~> sink1"
+				"     errorHandlingOption: 'stopOnFirstError') ~> SinkOrders"
 			]
 		}
 	}
