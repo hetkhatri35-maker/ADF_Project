@@ -1,0 +1,120 @@
+{
+	"name": "DF_Enrich_orders",
+	"properties": {
+		"description": "Enrich rders",
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "DS_Fact_Orders",
+						"type": "DatasetReference"
+					},
+					"name": "RawSource"
+				},
+				{
+					"dataset": {
+						"referenceName": "DS_SQL_Dimcustomers",
+						"type": "DatasetReference"
+					},
+					"name": "Customers"
+				},
+				{
+					"dataset": {
+						"referenceName": "DS_SQL_Dim_Products",
+						"type": "DatasetReference"
+					},
+					"name": "Products"
+				}
+			],
+			"sinks": [],
+			"transformations": [
+				{
+					"name": "OrdersWithCutomers"
+				},
+				{
+					"name": "EnrichProducts"
+				},
+				{
+					"name": "derivedColumn1"
+				}
+			],
+			"scriptLines": [
+				"source(output(",
+				"          Orderid as string,",
+				"          CustomerId as string,",
+				"          Productid as string,",
+				"          Customername as string,",
+				"          Productname as string,",
+				"          Cetagory as string,",
+				"          Orderdate as date,",
+				"          Ordermonth as integer,",
+				"          OrderYear as integer,",
+				"          Quentity as integer,",
+				"          UnitPrice as decimal(10,2),",
+				"          Discountpct as decimal(10,2),",
+				"          Discountamount as decimal(10,2),",
+				"          GrossRevenue as decimal(10,2),",
+				"          ShippingCost as decimal(10,2),",
+				"          Netrevenue as decimal(10,2),",
+				"          CostofGoods as decimal(10,2),",
+				"          GrossProfit as decimal(10,2),",
+				"          PaymentMethord as string,",
+				"          Orderstatus as string,",
+				"          Isdelivered as boolean,",
+				"          Region as string,",
+				"          LoadAt as timestamp",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     isolationLevel: 'READ_UNCOMMITTED',",
+				"     format: 'table') ~> RawSource",
+				"source(output(",
+				"          Customerid as string,",
+				"          Fullname as string,",
+				"          Email as string,",
+				"          City as string,",
+				"          State as string,",
+				"          Country as string,",
+				"          Customersegment as string,",
+				"          Joindate as date,",
+				"          Loaddate as timestamp",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     isolationLevel: 'READ_UNCOMMITTED',",
+				"     format: 'table') ~> Customers",
+				"source(output(",
+				"          productId as string,",
+				"          ProductName as string,",
+				"          Category as string,",
+				"          Subcatogery as string,",
+				"          Brand as string,",
+				"          UnitPrice as decimal(10,2),",
+				"          CostPrice as decimal(10,2),",
+				"          Supplier as string,",
+				"          Isactive as boolean,",
+				"          Loadat as timestamp",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     isolationLevel: 'READ_UNCOMMITTED',",
+				"     format: 'table') ~> Products",
+				"RawSource, Customers join(RawSource@CustomerId == Customers@Customerid,",
+				"     joinType:'left',",
+				"     matchType:'exact',",
+				"     ignoreSpaces: false,",
+				"     broadcast: 'auto')~> OrdersWithCutomers",
+				"OrdersWithCutomers, Products join(RawSource@Productid == Products@productId,",
+				"     joinType:'left',",
+				"     matchType:'exact',",
+				"     ignoreSpaces: false,",
+				"     broadcast: 'auto')~> EnrichProducts",
+				"EnrichProducts derive(CostOfGoods = Quentity * CostPrice,",
+				"          GrossProfit = Netrevenue - (Quentity * CostPrice)\r",
+				",",
+				"          ProfitMarginPct = (Netrevenue - Quentity * CostPrice) / iif(Netrevenue == toDecimal(0), toDecimal(1), Netrevenue)*100) ~> derivedColumn1"
+			]
+		}
+	}
+}
